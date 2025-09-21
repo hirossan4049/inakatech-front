@@ -10,6 +10,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import TreeDetailPage from "./pages/TreeDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,14 @@ const router = createBrowserRouter([
   {
     path: "/register",
     element: <RegisterPage />,
+  },
+  {
+    path: "/tree/:treeId",
+    element: (
+      <ProtectedRoute>
+        <TreeDetailPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "*",

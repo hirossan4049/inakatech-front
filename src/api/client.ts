@@ -19,6 +19,20 @@ export interface RegisterResponse {
   user_id: number;
 }
 
+export interface Tree {
+  id: number;
+  lat: number;
+  lng: number;
+  type: string;
+  lidar_url: string | null;
+}
+
+export interface WorkLog {
+  id: number;
+  date: string;
+  description: string;
+}
+
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
@@ -45,7 +59,7 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.token) {
@@ -77,6 +91,34 @@ class ApiClient {
     return this.request<RegisterResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
+    });
+  }
+
+  // Tree endpoints
+  async getTrees(): Promise<Tree[]> {
+    return this.request<Tree[]>('/trees');
+  }
+
+  async getTree(treeId: number): Promise<Tree> {
+    return this.request<Tree>(`/trees/${treeId}`);
+  }
+
+  async createTree(data: { lat: number; lng: number; type: string }): Promise<Tree> {
+    return this.request<Tree>('/trees', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Work log endpoints
+  async getWorkLogs(treeId: number): Promise<WorkLog[]> {
+    return this.request<WorkLog[]>(`/trees/${treeId}/worklogs`);
+  }
+
+  async createWorkLog(treeId: number, data: { date: string; description: string }): Promise<WorkLog> {
+    return this.request<WorkLog>(`/trees/${treeId}/worklogs`, {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }
