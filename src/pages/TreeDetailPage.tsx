@@ -1,4 +1,4 @@
-import { Container, Title, Text, Button, Stack, Group, Box, Card, Grid, Badge, Loader } from '@mantine/core';
+import { Container, Title, Text, Button, Stack, Group, Box, Card, Grid, Badge, Loader, ActionIcon } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconArrowLeft, IconMapPin, IconTree, IconFile, IconCalendar, IconPlus } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
@@ -70,36 +70,34 @@ export default function TreeDetailPage() {
   }
 
   return (
-    <Container size={isMobile ? '100%' : 'md'} py="xl">
-      <Stack gap="lg">
-        <Group justify="space-between">
-          <Button
-            variant="light"
-            leftSection={<IconArrowLeft size={16} />}
-            onClick={() => navigate('/')}
-          >
-            戻る
-          </Button>
-        </Group>
+    <>
+      {/* Full-width 3D viewer without extra margins */}
+      <Box style={{ height: '50vh', width: '100%' }}>
+        <ModelViewer
+          src={'/sample.glb'}
+          iosSrc={tree.lidar_url || '/sample.usdz'}
+          alt="Tree USDZ Model"
+          ar
+          arModes="quick-look"
+          poster="/vite.svg"
+          style={{ width: '100%', height: '100%', display: 'block', background: 'transparent', border: 'none' }}
+        />
+      </Box>
 
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Stack gap="sm">
-            <Title order={3}>3Dモデル / AR</Title>
-            <Box style={{ display: 'flex', justifyContent: 'center' }}>
-              <ModelViewer
-                src={'/sample.glb'}
-                iosSrc={tree.lidar_url || '/sample.usdz'}
-                width={isMobile ? 320 : 600}
-                height={isMobile ? 240 : 400}
-                alt="Tree USDZ Model"
-                ar
-                arModes="quick-look"
-                poster="/vite.svg"
-              />
-            </Box>
-          </Stack>
-        </Card>
+      {/* Floating back button bottom-left */}
+      <ActionIcon
+        onClick={() => navigate('/')}
+        variant="filled"
+        color="gray"
+        radius="xl"
+        size="xl"
+        style={{ position: 'fixed', left: 16, bottom: 16, zIndex: 2000 }}
+        aria-label="戻る"
+      >
+        <IconArrowLeft size={20} />
+      </ActionIcon>
 
+      <Container size={isMobile ? '100%' : 'md'} py="md">
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Stack gap="md">
             <Group justify="space-between">
@@ -185,7 +183,7 @@ export default function TreeDetailPage() {
             )}
           </Stack>
         </Card>
-      </Stack>
-    </Container>
+      </Container>
+    </>
   );
 }

@@ -12,6 +12,7 @@ interface ModelViewerProps {
   ar?: boolean;
   arModes?: string; // e.g. "quick-look scene-viewer webxr"
   poster?: string;
+  style?: React.CSSProperties;
 }
 
 declare global {
@@ -46,7 +47,8 @@ export const ModelViewer = ({
   cameraControls = true,
   ar = true,
   arModes = 'quick-look',
-  poster
+  poster,
+  style: customStyle
 }: ModelViewerProps) => {
   const modelViewerRef = useRef<HTMLElement>(null);
   const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(src);
@@ -109,7 +111,7 @@ export const ModelViewer = ({
       ar-modes={arModes}
       shadow-intensity={1}
       {...(poster ? { poster } : {})}
-      style={{
+      style={customStyle ?? {
         width: `${width}px`,
         height: `${height}px`,
         border: '1px solid #ccc',
