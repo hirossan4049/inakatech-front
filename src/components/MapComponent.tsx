@@ -1,7 +1,7 @@
 import { Wrapper, Status } from '@googlemaps/react-wrapper';
 import { ActionIcon, Box } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconCurrentLocation } from '@tabler/icons-react';
+import { IconCurrentLocation, IconTarget } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { Tree } from '../api/client';
@@ -24,6 +24,9 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
   const [map, setMap] = useState<google.maps.Map>();
   const markersRef = useRef<google.maps.Marker[]>([]);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isWatching, setIsWatching] = useState(false);
+  const watchIdRef = useRef<number | null>(null);
+  const userMarkerRef = useRef<google.maps.Marker | null>(null);
 
   useEffect(() => {
     if (ref.current && !map) {
@@ -121,21 +124,26 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
           map.setCenter({ lat: latitude, lng: longitude });
           map.setZoom(15);
 
-          // Add current location marker
-          new window.google.maps.Marker({
-            position: { lat: latitude, lng: longitude },
-            map: map,
-            title: '現在地',
-            icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" fill="lightblue" stroke="blue"/>
-                  <circle cx="12" cy="12" r="3" fill="blue"/>
-                </svg>
-              `),
-              scaledSize: new window.google.maps.Size(24, 24),
-            }
-          });
+          // Add or update current location marker
+          if (!userMarkerRef.current) {
+            userMarkerRef.current = new window.google.maps.Marker({
+              position: { lat: latitude, lng: longitude },
+              map: map,
+              title: '現在地',
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" fill="lightblue" stroke="blue"/>
+                    <circle cx="12" cy="12" r="3" fill="blue"/>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(24, 24),
+              }
+            });
+          } else {
+            userMarkerRef.current.setPosition({ lat: latitude, lng: longitude });
+            userMarkerRef.current.setMap(map);
+          }
         }
 
         setIsGettingLocation(false);
@@ -176,6 +184,91 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
     );
   };
 
+  const startWatchingLocation = () => {
+    if (!navigator.geolocation) {
+      notifications.show({
+        title: 'エラー',
+        message: 'お使いのブラウザは位置情報をサポートしていません',
+        color: 'red',
+      });
+      return;
+    }
+
+    if (watchIdRef.current !== null) return; // already watching
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (map) {
+          if (!userMarkerRef.current) {
+            userMarkerRef.current = new window.google.maps.Marker({
+              position: { lat: latitude, lng: longitude },
+              map,
+              title: '現在地(追跡中)',
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="teal" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" fill="#c7f7f0" stroke="teal"/>
+                    <circle cx="12" cy="12" r="3" fill="teal"/>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(24, 24),
+              }
+            });
+          } else {
+            userMarkerRef.current.setPosition({ lat: latitude, lng: longitude });
+            userMarkerRef.current.setMap(map);
+          }
+          map.setCenter({ lat: latitude, lng: longitude });
+        }
+      },
+      (error) => {
+        console.error('位置情報の監視に失敗:', error);
+        let message = '位置情報の監視に失敗しました';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = '位置情報の使用が拒否されました';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = '位置情報が利用できません';
+            break;
+          case error.TIMEOUT:
+            message = '位置情報の取得がタイムアウトしました';
+            break;
+        }
+        notifications.show({ title: 'エラー', message, color: 'red' });
+        stopWatchingLocation();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 5000,
+      }
+    );
+
+    watchIdRef.current = id;
+    setIsWatching(true);
+    notifications.show({ title: '追跡開始', message: '現在地の追跡を開始しました', color: 'teal' });
+  };
+
+  const stopWatchingLocation = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setIsWatching(false);
+    notifications.show({ title: '追跡停止', message: '現在地の追跡を停止しました', color: 'gray' });
+  };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup watcher on unmount
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
+
   return (
     <Box style={{ position: 'relative', width: '100%', height: '100%' }}>
       <Box ref={ref} style={{ width: '100%', height: '100%' }} />
@@ -193,6 +286,21 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
         }}
       >
         <IconCurrentLocation size={18} />
+      </ActionIcon>
+      <ActionIcon
+        onClick={isWatching ? stopWatchingLocation : startWatchingLocation}
+        variant={isWatching ? 'filled' : 'light'}
+        color={isWatching ? 'teal' : 'gray'}
+        size="lg"
+        style={{
+          position: 'absolute',
+          bottom: '64px',
+          left: '16px',
+          zIndex: 1000,
+        }}
+        title={isWatching ? '追跡停止' : '追跡開始'}
+      >
+        <IconTarget size={18} />
       </ActionIcon>
     </Box>
   );

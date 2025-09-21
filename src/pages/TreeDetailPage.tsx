@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient, type Tree, type WorkLog } from '../api/client';
 import { useMediaQuery } from '@mantine/hooks';
+import { ModelViewer } from '../components/ModelViewer';
 
 export default function TreeDetailPage() {
   const { treeId } = useParams<{ treeId: string }>();
@@ -80,6 +81,24 @@ export default function TreeDetailPage() {
             戻る
           </Button>
         </Group>
+
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          <Stack gap="sm">
+            <Title order={3}>3Dモデル / AR</Title>
+            <Box style={{ display: 'flex', justifyContent: 'center' }}>
+              <ModelViewer
+                src={'/sample.glb'}
+                iosSrc={tree.lidar_url || '/sample.usdz'}
+                width={isMobile ? 320 : 600}
+                height={isMobile ? 240 : 400}
+                alt="Tree USDZ Model"
+                ar
+                arModes="quick-look"
+                poster="/vite.svg"
+              />
+            </Box>
+          </Stack>
+        </Card>
 
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Stack gap="md">

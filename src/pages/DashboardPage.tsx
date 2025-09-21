@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient, type Tree } from '../api/client';
 import MapComponent from '../components/MapComponent';
+import { ModelViewer } from '../components/ModelViewer';
 import TreeRegistrationForm from '../components/TreeRegistrationForm';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -108,6 +109,19 @@ export default function DashboardPage() {
           <Text size="lg" c="dimmed">
             ここから木の管理やLiDARファイルの管理、作業日誌の記録ができます。
           </Text>
+
+          <Box>
+            <Text size="md" mb="sm">USDZモデルプレビュー (iOS対応):</Text>
+            <ModelViewer
+              src="/sample.glb"
+              iosSrc="/sample.usdz"
+              width={300}
+              height={200}
+              alt="Sample tree model"
+              ar
+              arModes="quick-look"
+            />
+          </Box>
 
           <ActionIcon
             variant="light"
