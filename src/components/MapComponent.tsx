@@ -278,6 +278,7 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
         variant="filled"
         color="blue"
         size="lg"
+        title="現在地へ移動"
         style={{
           position: 'absolute',
           bottom: '16px',
