@@ -10,9 +10,14 @@ interface MapComponentProps {
   trees: Tree[];
   apiKey: string;
   onTreeClick?: (tree: Tree) => void;
+  onEmptyAreaClick?: (lat: number, lng: number) => void;
 }
 
-function Map({ trees, onTreeClick }: { trees: Tree[]; onTreeClick?: (tree: Tree) => void }) {
+function Map({ trees, onTreeClick, onEmptyAreaClick }: {
+  trees: Tree[];
+  onTreeClick?: (tree: Tree) => void;
+  onEmptyAreaClick?: (lat: number, lng: number) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map>();
 
@@ -30,9 +35,21 @@ function Map({ trees, onTreeClick }: { trees: Tree[]; onTreeClick?: (tree: Tree)
         center,
         zoom: trees.length > 0 ? 12 : 10,
       });
+
+      // Add click listener for empty area clicks (direct registration)
+      if (onEmptyAreaClick) {
+        newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
+          if (event.latLng) {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
+            onEmptyAreaClick(lat, lng);
+          }
+        });
+      }
+
       setMap(newMap);
     }
-  }, [ref, map, trees]);
+  }, [ref, map, trees, onEmptyAreaClick]);
 
   useEffect(() => {
     if (map && trees.length > 0) {
@@ -87,10 +104,11 @@ function Map({ trees, onTreeClick }: { trees: Tree[]; onTreeClick?: (tree: Tree)
     }
   }, [map, trees, onTreeClick]);
 
-  return <Box ref={ref} style={{ width: '100%', height: '100%' }} />;
+
+  return <Box ref={ref} style={{ width: '100%', height: 'calc(100vh - 120px)' }} />;
 }
 
-export default function MapComponent({ trees, apiKey, onTreeClick }: MapComponentProps) {
+export default function MapComponent({ trees, apiKey, onTreeClick, onEmptyAreaClick }: MapComponentProps) {
   const render = (status: Status): ReactElement => {
     if (status === Status.LOADING) return <Box>Loading map...</Box>;
     if (status === Status.FAILURE) return <Box>Error loading map</Box>;
@@ -99,7 +117,11 @@ export default function MapComponent({ trees, apiKey, onTreeClick }: MapComponen
 
   return (
     <Wrapper apiKey={apiKey} render={render}>
-      <Map trees={trees} onTreeClick={onTreeClick} />
+      <Map
+        trees={trees}
+        onTreeClick={onTreeClick}
+        onEmptyAreaClick={onEmptyAreaClick}
+      />
     </Wrapper>
   );
 }

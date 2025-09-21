@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun --bun vite",
+    "dev": "vite",
     "build": "bun --bun vite build",
     "preview": "bun --bun vite preview",
     "lint": "bunx --bun biome check .",
