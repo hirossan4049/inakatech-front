@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import TreeDetailPage from "./pages/TreeDetailPage";
+import JournalCreatePage from "./pages/JournalCreatePage";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <TreeDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/tree/:treeId/create",
+    element: (
+      <ProtectedRoute>
+        <JournalCreatePage />
       </ProtectedRoute>
     ),
   },

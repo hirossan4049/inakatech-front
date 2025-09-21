@@ -1,6 +1,6 @@
 import { Container, Title, Text, Button, Stack, Group, Box, Card, Grid, Badge, Loader } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconMapPin, IconTree, IconFile, IconCalendar } from '@tabler/icons-react';
+import { IconArrowLeft, IconMapPin, IconTree, IconFile, IconCalendar, IconPlus } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient, type Tree, type WorkLog } from '../api/client';
@@ -124,12 +124,22 @@ export default function TreeDetailPage() {
 
         <Card shadow="sm" padding="lg" radius="md" withBorder>
           <Stack gap="md">
-            <Title order={3}>
-              <Group gap="sm">
-                <IconCalendar size={24} />
-                作業日誌
-              </Group>
-            </Title>
+            <Group justify="space-between">
+              <Title order={3}>
+                <Group gap="sm">
+                  <IconCalendar size={24} />
+                  作業日誌
+                </Group>
+              </Title>
+              <Button
+                variant="filled"
+                color="blue"
+                leftSection={<IconPlus size={16} />}
+                onClick={() => navigate(`/tree/${tree.id}/create`)}
+              >
+                日誌追加
+              </Button>
+            </Group>
 
             {workLogs.length === 0 ? (
               <Text c="dimmed" ta="center" py="xl">
