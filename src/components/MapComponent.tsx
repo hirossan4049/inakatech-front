@@ -20,23 +20,15 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map>();
+  const markersRef = useRef<google.maps.Marker[]>([]);
 
   useEffect(() => {
     if (ref.current && !map) {
-      // Calculate center from trees if available, otherwise use Tokyo as default
-      const center = trees.length > 0
-        ? {
-            lat: trees.reduce((sum, tree) => sum + tree.lat, 0) / trees.length,
-            lng: trees.reduce((sum, tree) => sum + tree.lng, 0) / trees.length
-          }
-        : { lat: 35.6762, lng: 139.6503 }; // Tokyo center as fallback
-
       const newMap = new window.google.maps.Map(ref.current, {
-        center,
-        zoom: trees.length > 0 ? 12 : 10,
+        center: { lat: 35.6762, lng: 139.6503 }, // Tokyo center as fallback
+        zoom: 10,
       });
 
-      // Add click listener for empty area clicks (direct registration)
       if (onEmptyAreaClick) {
         newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
           if (event.latLng) {
@@ -49,12 +41,14 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
 
       setMap(newMap);
     }
-  }, [ref, map, trees, onEmptyAreaClick]);
+  }, [ref, map, onEmptyAreaClick]);
 
   useEffect(() => {
-    if (map && trees.length > 0) {
-      // Clear existing markers
-      // Add tree markers
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current = [];
+
+    if (map) {
       const bounds = new window.google.maps.LatLngBounds();
 
       trees.forEach((tree) => {
@@ -74,6 +68,7 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
           }
         });
 
+        markersRef.current.push(marker);
         bounds.extend(new window.google.maps.LatLng(tree.lat, tree.lng));
 
         // Add click listener for tree navigation
@@ -97,7 +92,6 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
         });
       });
 
-      // Fit map to show all trees
       if (trees.length > 0) {
         map.fitBounds(bounds);
       }
@@ -105,7 +99,7 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
   }, [map, trees, onTreeClick]);
 
 
-  return <Box ref={ref} style={{ width: '100%', height: 'calc(100vh - 120px)' }} />;
+  return <Box ref={ref} style={{ width: '100%', height: '100%' }} />;
 }
 
 export default function MapComponent({ trees, apiKey, onTreeClick, onEmptyAreaClick }: MapComponentProps) {

@@ -16,6 +16,7 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface RegisterFormValues {
   username: string;
@@ -28,6 +29,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const form = useForm<RegisterFormValues>({
     initialValues: {
@@ -68,12 +70,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <Container size={420} my={40}>
+    <Container size={isMobile ? '100%' : 420} my={40}>
       <Title ta="center" mb="md">
         新規登録
       </Title>
 
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+      <Paper withBorder shadow="md" p={isMobile ? 'md' : 30} mt={30} radius="md">
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
             {error && (

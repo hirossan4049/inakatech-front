@@ -1,12 +1,13 @@
-import { Container, Title, Text, Button, Stack, Group, Box } from '@mantine/core';
+import { Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconLogout, IconPlus } from '@tabler/icons-react';
-import { useAuth } from '../contexts/AuthContext';
+import { IconLogout } from '@tabler/icons-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { apiClient, type Tree } from '../api/client';
 import MapComponent from '../components/MapComponent';
 import TreeRegistrationForm from '../components/TreeRegistrationForm';
-import { apiClient, type Tree } from '../api/client';
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function DashboardPage() {
   const { logout } = useAuth();
@@ -16,6 +17,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [registrationFormOpened, setRegistrationFormOpened] = useState(false);
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | undefined>();
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -66,19 +68,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <Container size="md" py="xl">
+    <Container size={isMobile ? '100%' : 'md'} py="xl">
       <Stack gap="lg">
         <Group justify="space-between">
           <Title order={1}>ダッシュボード</Title>
-          <Group gap="sm">
-            <Button
-              variant="filled"
-              color="green"
-              leftSection={<IconPlus size={16} />}
-              onClick={() => setRegistrationFormOpened(true)}
-            >
-              木を登録
-            </Button>
+          <Stack gap="sm" w={isMobile ? '100%' : 'auto'}>
             <Button
               variant="light"
               color="red"
@@ -87,7 +81,7 @@ export default function DashboardPage() {
             >
               ログアウト
             </Button>
-          </Group>
+          </Stack>
         </Group>
 
         <Text size="lg" c="dimmed">
@@ -101,7 +95,7 @@ export default function DashboardPage() {
           ) : error ? (
             <Text c="red">{error}</Text>
           ) : (
-            <Box style={{ height: '500px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+            <Box style={{ height: isMobile ? '300px' : '500px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
               <MapComponent
                 trees={trees}
                 apiKey={GOOGLE_MAPS_API_KEY}
@@ -112,24 +106,15 @@ export default function DashboardPage() {
           )}
         </Stack>
 
-        <Stack gap="md">
-          <Title order={3}>利用可能な機能</Title>
-          <Text>• 木の登録と管理</Text>
-          <Text>• LiDARファイルのアップロードと管理</Text>
-          <Text>• 作業日誌の記録と閲覧</Text>
-        </Stack>
-
-        {selectedCoordinates && (
-          <TreeRegistrationForm
-            opened={registrationFormOpened}
-            onClose={() => {
-              setRegistrationFormOpened(false);
-              setSelectedCoordinates(undefined);
-            }}
-            onTreeCreated={handleTreeCreated}
-            selectedCoordinates={selectedCoordinates}
-          />
-        )}
+        <TreeRegistrationForm
+          opened={registrationFormOpened}
+          onClose={() => {
+            setRegistrationFormOpened(false);
+            setSelectedCoordinates(undefined);
+          }}
+          onTreeCreated={handleTreeCreated}
+          selectedCoordinates={selectedCoordinates}
+        />
       </Stack>
     </Container>
   );

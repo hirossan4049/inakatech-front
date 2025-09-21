@@ -1,9 +1,10 @@
 import { Modal, TextInput, Button, Stack, Group, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconTree, IconCheck, IconNfc } from '@tabler/icons-react';
+import { IconTree, IconCheck, IconNfc, IconCopy } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { apiClient, type Tree } from '../api/client';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface TreeRegistrationFormProps {
   opened: boolean;
@@ -19,6 +20,7 @@ interface TreeFormData {
 export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, selectedCoordinates }: TreeRegistrationFormProps) {
   const [lastTreeType, setLastTreeType] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const form = useForm<TreeFormData>({
     initialValues: {
@@ -36,7 +38,7 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
       setLastTreeType(saved);
       form.setFieldValue('type', saved);
     }
-  }, [form]);
+  }, []);
 
 
   const handleSubmit = async (values: TreeFormData) => {
@@ -167,6 +169,19 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
     onClose();
   };
 
+  if (!selectedCoordinates) {
+    return (
+      <Modal opened={opened} onClose={handleClose} title="場所を選択してください" centered>
+        <Text ta="center" p="md">
+          マップをクリックして、木を登録する場所を選んでください。
+        </Text>
+        <Group justify="center">
+          <Button onClick={handleClose}>閉じる</Button>
+        </Group>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       opened={opened}
@@ -178,6 +193,8 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
         </Group>
       }
       size="md"
+      fullScreen={isMobile}
+      radius={isMobile ? 0 : undefined}
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">

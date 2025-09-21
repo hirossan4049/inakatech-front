@@ -4,6 +4,7 @@ import { IconDeviceFloppy, IconArrowLeft, IconMicrophone, IconMicrophoneOff } fr
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient, type Tree } from '../api/client';
+import { useMediaQuery } from '@mantine/hooks';
 
 export default function JournalCreatePage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function JournalCreatePage() {
   const [treeLoading, setTreeLoading] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
     const fetchTree = async () => {
@@ -182,7 +184,7 @@ export default function JournalCreatePage() {
   };
 
   return (
-    <Container size="md" py="xl">
+    <Container size={isMobile ? '100%' : 'md'} py="xl">
       <Stack gap="lg">
         <Group justify="space-between">
           <Title order={1}>新規日誌作成</Title>
@@ -204,10 +206,11 @@ export default function JournalCreatePage() {
         ) : tree ? (
           <Card withBorder shadow="sm" padding="lg">
             <Stack gap="md">
-              <Group gap="sm">
+              <Stack gap="xs">
                 <Text fw={500}>対象の木:</Text>
-                <Text>{`木 #${tree.id} (${tree.type}) - ${tree.lat.toFixed(4)}, ${tree.lng.toFixed(4)}`}</Text>
-              </Group>
+                <Text>{`木 #${tree.id} (${tree.type})`}</Text>
+                <Text size="sm" c="dimmed">{`緯度: ${tree.lat.toFixed(4)}, 経度: ${tree.lng.toFixed(4)}`}</Text>
+              </Stack>
 
             <TextInput
               label="作業日"

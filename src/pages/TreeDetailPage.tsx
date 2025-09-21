@@ -4,6 +4,7 @@ import { IconArrowLeft, IconMapPin, IconTree, IconFile, IconCalendar, IconPlus }
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient, type Tree, type WorkLog } from '../api/client';
+import { useMediaQuery } from '@mantine/hooks';
 
 export default function TreeDetailPage() {
   const { treeId } = useParams<{ treeId: string }>();
@@ -12,6 +13,7 @@ export default function TreeDetailPage() {
   const [workLogs, setWorkLogs] = useState<WorkLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
     const fetchTreeData = async () => {
@@ -67,7 +69,7 @@ export default function TreeDetailPage() {
   }
 
   return (
-    <Container size="md" py="xl">
+    <Container size={isMobile ? '100%' : 'md'} py="xl">
       <Stack gap="lg">
         <Group justify="space-between">
           <Button
@@ -94,14 +96,14 @@ export default function TreeDetailPage() {
             </Group>
 
             <Grid>
-              <Grid.Col span={6}>
+              <Grid.Col span={isMobile ? 12 : 6}>
                 <Group gap="xs">
                   <IconMapPin size={16} />
                   <Text fw={500}>緯度:</Text>
                   <Text>{tree.lat}</Text>
                 </Group>
               </Grid.Col>
-              <Grid.Col span={6}>
+              <Grid.Col span={isMobile ? 12 : 6}>
                 <Group gap="xs">
                   <IconMapPin size={16} />
                   <Text fw={500}>経度:</Text>
