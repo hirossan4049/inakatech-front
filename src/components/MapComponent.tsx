@@ -1,5 +1,7 @@
 import { Wrapper, Status } from '@googlemaps/react-wrapper';
-import { Box } from '@mantine/core';
+import { ActionIcon, Box } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconCurrentLocation } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { Tree } from '../api/client';
@@ -21,6 +23,7 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map>();
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   useEffect(() => {
     if (ref.current && !map) {
@@ -98,8 +101,101 @@ function Map({ trees, onTreeClick, onEmptyAreaClick }: {
     }
   }, [map, trees, onTreeClick]);
 
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      notifications.show({
+        title: 'エラー',
+        message: 'お使いのブラウザは位置情報をサポートしていません',
+        color: 'red',
+      });
+      return;
+    }
 
-  return <Box ref={ref} style={{ width: '100%', height: '100%' }} />;
+    setIsGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        if (map) {
+          map.setCenter({ lat: latitude, lng: longitude });
+          map.setZoom(15);
+
+          // Add current location marker
+          new window.google.maps.Marker({
+            position: { lat: latitude, lng: longitude },
+            map: map,
+            title: '現在地',
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" fill="lightblue" stroke="blue"/>
+                  <circle cx="12" cy="12" r="3" fill="blue"/>
+                </svg>
+              `),
+              scaledSize: new window.google.maps.Size(24, 24),
+            }
+          });
+        }
+
+        setIsGettingLocation(false);
+        notifications.show({
+          title: '現在地を取得しました',
+          message: 'マップを現在地に移動しました',
+          color: 'blue',
+        });
+      },
+      (error) => {
+        setIsGettingLocation(false);
+        console.error('位置情報の取得に失敗:', error);
+
+        let message = '位置情報の取得に失敗しました';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = '位置情報の使用が拒否されました';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = '位置情報が利用できません';
+            break;
+          case error.TIMEOUT:
+            message = '位置情報の取得がタイムアウトしました';
+            break;
+        }
+
+        notifications.show({
+          title: 'エラー',
+          message,
+          color: 'red',
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  return (
+    <Box style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Box ref={ref} style={{ width: '100%', height: '100%' }} />
+      <ActionIcon
+        onClick={getCurrentLocation}
+        loading={isGettingLocation}
+        variant="filled"
+        color="blue"
+        size="lg"
+        style={{
+          position: 'absolute',
+          bottom: '16px',
+          left: '16px',
+          zIndex: 1000,
+        }}
+      >
+        <IconCurrentLocation size={18} />
+      </ActionIcon>
+    </Box>
+  );
 }
 
 export default function MapComponent({ trees, apiKey, onTreeClick, onEmptyAreaClick }: MapComponentProps) {
