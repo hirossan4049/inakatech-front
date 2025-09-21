@@ -13,6 +13,8 @@ interface ModelViewerProps {
   arModes?: string; // e.g. "quick-look scene-viewer webxr"
   poster?: string;
   style?: React.CSSProperties;
+  cameraTarget?: string; // e.g. "0m -0.2m 0m"
+  cameraOrbit?: string;  // e.g. "0deg 65deg 2m"
 }
 
 declare global {
@@ -29,6 +31,8 @@ declare global {
           ar?: boolean;
           'ar-modes'?: string;
           poster?: string;
+          'camera-target'?: string;
+          'camera-orbit'?: string;
           style?: React.CSSProperties;
         },
         HTMLElement
@@ -48,7 +52,9 @@ export const ModelViewer = ({
   ar = true,
   arModes = 'quick-look',
   poster,
-  style: customStyle
+  style: customStyle,
+  cameraTarget,
+  cameraOrbit
 }: ModelViewerProps) => {
   const modelViewerRef = useRef<HTMLElement>(null);
   const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(src);
@@ -109,6 +115,8 @@ export const ModelViewer = ({
       camera-controls={cameraControls}
       ar={ar}
       ar-modes={arModes}
+      {...(cameraTarget ? { ['camera-target']: cameraTarget } : {})}
+      {...(cameraOrbit ? { ['camera-orbit']: cameraOrbit } : {})}
       shadow-intensity={1}
       {...(poster ? { poster } : {})}
       style={customStyle ?? {

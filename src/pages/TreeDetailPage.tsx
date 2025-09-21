@@ -1,10 +1,10 @@
-import { Container, Title, Text, Button, Stack, Group, Box, Card, Grid, Badge, Loader, ActionIcon } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconMapPin, IconTree, IconFile, IconCalendar, IconPlus } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { apiClient, type Tree, type WorkLog } from '../api/client';
+import { ActionIcon, Badge, Box, Button, Card, Container, Grid, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
+import { IconArrowLeft, IconCalendar, IconFile, IconMapPin, IconPlus, IconTree } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { apiClient, type Tree, type WorkLog } from '../api/client';
 import { ModelViewer } from '../components/ModelViewer';
 
 export default function TreeDetailPage() {
@@ -79,7 +79,7 @@ export default function TreeDetailPage() {
           alt="Tree USDZ Model"
           ar
           arModes="quick-look"
-          poster="/vite.svg"
+          cameraTarget="0m -0.2m 0m"
           style={{ width: '100%', height: '100%', display: 'block', background: 'transparent', border: 'none' }}
         />
       </Box>

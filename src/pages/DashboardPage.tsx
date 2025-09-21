@@ -106,20 +106,15 @@ export default function DashboardPage() {
         withCloseButton={true}
       >
         <Stack gap="lg">
-          <Text size="lg" c="dimmed">
-            ここから木の管理やLiDARファイルの管理、作業日誌の記録ができます。
-          </Text>
-
-          <Box>
-            <Text size="md" mb="sm">USDZモデルプレビュー (iOS対応):</Text>
+          <Box style={{ width: '100%', height: '30vh' }}>
             <ModelViewer
               src="/sample.glb"
               iosSrc="/sample.usdz"
-              width={300}
-              height={200}
               alt="Sample tree model"
               ar
               arModes="quick-look"
+              cameraTarget="0m -0.2m 0m"
+              style={{ width: '100%', height: '100%', display: 'block', background: 'transparent', border: 'none' }}
             />
           </Box>
 
