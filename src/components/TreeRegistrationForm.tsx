@@ -1,7 +1,7 @@
 import { Modal, TextInput, Button, Stack, Group, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconTree, IconCopy, IconCheck, IconNfc } from '@tabler/icons-react';
+import { IconTree, IconCheck, IconNfc } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { apiClient, type Tree } from '../api/client';
 
@@ -18,6 +18,7 @@ interface TreeFormData {
 
 export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, selectedCoordinates }: TreeRegistrationFormProps) {
   const [lastTreeType, setLastTreeType] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<TreeFormData>({
     initialValues: {
@@ -39,6 +40,7 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
 
 
   const handleSubmit = async (values: TreeFormData) => {
+    setIsSubmitting(true);
     try {
       const newTree = await apiClient.createTree({
         type: values.type,
@@ -49,43 +51,63 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
       // Save tree type to localStorage for next time
       localStorage.setItem('lastTreeType', values.type);
 
-      // Create detail URL
+      // Create URLs
       const detailUrl = `${window.location.origin}/tree/${newTree.id}`;
-      const nfcUrl = `simplynfc://writer?url=${encodeURIComponent(detailUrl)}`;
+      const journalCreateUrl = `${window.location.origin}/tree/${newTree.id}/create`;
+      const nfcUrl = `simplynfc://writer?url=${encodeURIComponent(journalCreateUrl)}`;
 
       // Try to open SimplyNFC app first, then fallback to clipboard
       try {
         // Attempt to open NFC app
         window.location.href = nfcUrl;
 
-        // Also copy to clipboard as backup
-        await navigator.clipboard.writeText(detailUrl);
+        // Copy journal creation URL to clipboard as backup
+        await navigator.clipboard.writeText(journalCreateUrl);
 
         notifications.show({
-          title: '成功',
+          title: '木の登録完了',
           message: (
-            <Stack gap="xs">
-              <Text>木が正常に登録されました</Text>
-              <Group gap="xs">
-                <IconNfc size={16} color="blue" />
-                <Text size="sm">NFCアプリを開いています...</Text>
-              </Group>
-              <Group gap="xs">
-                <IconCheck size={16} color="green" />
-                <Text size="sm">詳細URLをクリップボードにコピーしました</Text>
-              </Group>
-              <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
-                {detailUrl}
-              </Text>
+            <Stack gap="md">
+              <Text fw={500}>木 #{newTree.id} ({newTree.type}) が正常に登録されました</Text>
+
+              <Stack gap="xs">
+                <Group gap="xs">
+                  <IconNfc size={16} color="blue" />
+                  <Text size="sm" fw={500}>NFC設定</Text>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  NFCアプリを開いています...日誌作成用URLを書き込んでください
+                </Text>
+                <Text size="xs" c="blue" style={{ wordBreak: 'break-all', backgroundColor: '#f8f9fa', padding: '4px 8px', borderRadius: '4px' }}>
+                  {journalCreateUrl}
+                </Text>
+              </Stack>
+
+              <Stack gap="xs">
+                <Group gap="xs">
+                  <IconCheck size={16} color="green" />
+                  <Text size="sm" fw={500}>クリップボード</Text>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  日誌作成URLをコピーしました
+                </Text>
+              </Stack>
+
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>参考: 木の詳細ページ</Text>
+                <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+                  {detailUrl}
+                </Text>
+              </Stack>
             </Stack>
           ),
           color: 'green',
-          autoClose: 8000,
+          autoClose: 12000,
         });
-      } catch (error) {
+      } catch {
         // Fallback if NFC app or clipboard fails
         try {
-          await navigator.clipboard.writeText(detailUrl);
+          await navigator.clipboard.writeText(journalCreateUrl);
           notifications.show({
             title: '成功',
             message: (
@@ -93,17 +115,17 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
                 <Text>木が正常に登録されました</Text>
                 <Group gap="xs">
                   <IconCheck size={16} color="green" />
-                  <Text size="sm">詳細URLをクリップボードにコピーしました</Text>
+                  <Text size="sm">日誌作成URLをクリップボードにコピーしました</Text>
                 </Group>
                 <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
-                  {detailUrl}
+                  {journalCreateUrl}
                 </Text>
               </Stack>
             ),
             color: 'green',
             autoClose: 8000,
           });
-        } catch (clipboardError) {
+        } catch {
           // Final fallback - just show the URL
           notifications.show({
             title: '成功',
@@ -112,10 +134,10 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
                 <Text>木が正常に登録されました</Text>
                 <Group gap="xs">
                   <IconCopy size={16} />
-                  <Text size="sm">詳細URL:</Text>
+                  <Text size="sm">日誌作成URL:</Text>
                 </Group>
                 <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
-                  {detailUrl}
+                  {journalCreateUrl}
                 </Text>
               </Stack>
             ),
@@ -128,13 +150,15 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
       onTreeCreated(newTree);
       form.reset();
       onClose();
-    } catch (error) {
-      console.error('Failed to create tree:', error);
+    } catch (err) {
+      console.error('Failed to create tree:', err);
       notifications.show({
         title: 'エラー',
         message: '木の登録に失敗しました',
         color: 'red',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -181,7 +205,7 @@ export default function TreeRegistrationForm({ opened, onClose, onTreeCreated, s
             <Button variant="light" onClick={handleClose}>
               キャンセル
             </Button>
-            <Button type="submit" loading={form.isSubmitting}>
+            <Button type="submit" loading={isSubmitting}>
               登録
             </Button>
           </Group>
